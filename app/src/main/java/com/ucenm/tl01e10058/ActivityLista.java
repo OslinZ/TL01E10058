@@ -154,6 +154,7 @@ public class ActivityLista extends AppCompatActivity {
         intent.putExtra("nombre", contactoSeleccionado.getNombre());
         intent.putExtra("telefono", contactoSeleccionado.getTelefono());
         intent.putExtra("nota", contactoSeleccionado.getNota());
+        intent.putExtra("pais", contactoSeleccionado.getPais()); // Aseguramos pasar el país
         startActivity(intent);
     }
 
@@ -174,6 +175,12 @@ public class ActivityLista extends AppCompatActivity {
             return;
         }
         Toast.makeText(this, "Mostrando perfil de: " + contactoSeleccionado.getNombre(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        obtenerContactos(""); // Refrescar lista al volver de MainActivity
     }
 
     class ContactoAdapter extends BaseAdapter {
@@ -198,7 +205,6 @@ public class ActivityLista extends AppCompatActivity {
             phone.setText(c.getTelefono());
             rb.setChecked(position == selectedPosition);
 
-            // Permitir que el clic en el RadioButton también seleccione la fila
             rb.setOnClickListener(v -> {
                 selectedPosition = position;
                 contactoSeleccionado = listaContactos.get(position);

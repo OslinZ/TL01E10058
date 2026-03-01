@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnSalvar, btnContactos;
     private ImageView imgContacto;
     private SQLiteHelper helper;
+    private int idContacto = -1; // Variable para almacenar el ID en modo edición
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // Ajustar el diseño para que no se oculte tras los botones virtuales (Navigation Bar)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -67,10 +66,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkIntentExtras() {
         if (getIntent().hasExtra("id")) {
+            idContacto = getIntent().getIntExtra("id", -1);
             txtNombre.setText(getIntent().getStringExtra("nombre"));
             txtTelefono.setText(getIntent().getStringExtra("telefono"));
             txtNota.setText(getIntent().getStringExtra("nota"));
             btnSalvar.setText("Actualizar Contacto");
+            
+            // Seleccionar el país en el spinner
+            String paisRecibido = getIntent().getStringExtra("pais");
+            ArrayAdapter adapter = (ArrayAdapter) spnPais.getAdapter();
+            if (paisRecibido != null) {
+                int spinnerPosition = adapter.getPosition(paisRecibido);
+                spnPais.setSelection(spinnerPosition);
+            }
         }
     }
 
@@ -80,13 +88,8 @@ public class MainActivity extends AppCompatActivity {
         String nota = txtNota.getText().toString().trim();
         String pais = spnPais.getSelectedItem().toString();
 
-        if (TextUtils.isEmpty(nombre)) {
-            txtNombre.setError("Debe escribir un nombre");
-            return;
-        }
-
-        if (TextUtils.isEmpty(telefono)) {
-            txtTelefono.setError("Debe escribir un teléfono");
+        if (TextUtils.isEmpty(nombre) || TextUtils.isEmpty(telefono) || TextUtils.isEmpty(nota)) {
+            Toast.makeText(this, "Por favor complete todos los campos", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -97,11 +100,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (!telefono.matches("^[0-9]{8,15}$")) {
             txtTelefono.setError("Teléfono inválido");
-            return;
-        }
-
-        if (TextUtils.isEmpty(nota)) {
-            txtNota.setError("Debe escribir una nota");
             return;
         }
 
@@ -116,12 +114,17 @@ public class MainActivity extends AppCompatActivity {
         values.put(SQLiteHelper.COLUMN_TELEFONO, telefono);
         values.put(SQLiteHelper.COLUMN_NOTA, nota);
 
-        if (getIntent().hasExtra("id")) {
-            int id = getIntent().getIntExtra("id", -1);
-            db.update(SQLiteHelper.TABLE_CONTACTOS, values, SQLiteHelper.COLUMN_ID + "=?", new String[]{String.valueOf(id)});
-            Toast.makeText(this, "Contacto actualizado", Toast.LENGTH_SHORT).show();
-            finish();
+        if (idContacto != -1) {
+            // Modo Actualización
+            int rows = db.update(SQLiteHelper.TABLE_CONTACTOS, values, SQLiteHelper.COLUMN_ID + "=?", new String[]{String.valueOf(idContacto)});
+            if (rows > 0) {
+                Toast.makeText(this, "Contacto actualizado", Toast.LENGTH_SHORT).show();
+                finish(); // Regresar a la lista
+            } else {
+                Toast.makeText(this, "Error al actualizar", Toast.LENGTH_SHORT).show();
+            }
         } else {
+            // Modo Guardado nuevo
             db.insert(SQLiteHelper.TABLE_CONTACTOS, null, values);
             Toast.makeText(this, "Contacto guardado", Toast.LENGTH_SHORT).show();
             limpiarCampos();
@@ -133,5 +136,6 @@ public class MainActivity extends AppCompatActivity {
         txtNombre.setText("");
         txtTelefono.setText("");
         txtNota.setText("");
+        spnPais.setSelection(0);
     }
 }
