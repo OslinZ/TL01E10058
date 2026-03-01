@@ -6,16 +6,23 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.util.ArrayList;
 
@@ -26,13 +33,22 @@ public class ActivityLista extends AppCompatActivity {
     private Button btnAtras, btnCompartir, btnVerImagen, btnEliminar, btnActualizar;
     private SQLiteHelper helper;
     private ArrayList<Contactos> listaContactos;
-    private ArrayList<String> listaString;
     private Contactos contactoSeleccionado;
+    private int selectedPosition = -1;
+    private ContactoAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_lista);
+
+        // Ajuste para botones virtuales y barra de estado
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_lista), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         helper = new SQLiteHelper(this);
         listContactos = findViewById(R.id.listContactos);
@@ -49,6 +65,8 @@ public class ActivityLista extends AppCompatActivity {
 
         listContactos.setOnItemClickListener((parent, view, position, id) -> {
             contactoSeleccionado = listaContactos.get(position);
+            selectedPosition = position;
+            adapter.notifyDataSetChanged();
             mostrarDialogoLlamada();
         });
 
@@ -72,7 +90,6 @@ public class ActivityLista extends AppCompatActivity {
     private void obtenerContactos(String busqueda) {
         SQLiteDatabase db = helper.getReadableDatabase();
         listaContactos = new ArrayList<>();
-        listaString = new ArrayList<>();
 
         String query = "SELECT * FROM " + SQLiteHelper.TABLE_CONTACTOS;
         if (!busqueda.isEmpty()) {
@@ -80,23 +97,18 @@ public class ActivityLista extends AppCompatActivity {
         }
 
         Cursor cursor = db.rawQuery(query, null);
-
         while (cursor.moveToNext()) {
-            Contactos contacto = new Contactos(
-                    cursor.getInt(0),
-                    cursor.getString(1),
-                    cursor.getString(2),
-                    cursor.getString(3),
-                    cursor.getString(4),
-                    cursor.getBlob(5)
-            );
-            listaContactos.add(contacto);
-            listaString.add(contacto.getNombre() + " | " + contacto.getTelefono());
+            listaContactos.add(new Contactos(
+                    cursor.getInt(0), cursor.getString(1), cursor.getString(2),
+                    cursor.getString(3), cursor.getString(4), cursor.getBlob(5)
+            ));
         }
         cursor.close();
         db.close();
 
-        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_activated_1, listaString);
+        selectedPosition = -1;
+        contactoSeleccionado = null;
+        adapter = new ContactoAdapter();
         listContactos.setAdapter(adapter);
     }
 
@@ -115,20 +127,26 @@ public class ActivityLista extends AppCompatActivity {
 
     private void eliminarContacto() {
         if (contactoSeleccionado == null) {
-            Toast.makeText(this, "Seleccione un contacto", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Debe seleccionar un contacto de la lista", Toast.LENGTH_SHORT).show();
             return;
         }
-        SQLiteDatabase db = helper.getWritableDatabase();
-        db.delete(SQLiteHelper.TABLE_CONTACTOS, SQLiteHelper.COLUMN_ID + "=?", new String[]{String.valueOf(contactoSeleccionado.getId())});
-        db.close();
-        contactoSeleccionado = null;
-        obtenerContactos("");
-        Toast.makeText(this, "Contacto eliminado", Toast.LENGTH_SHORT).show();
+        new AlertDialog.Builder(this)
+                .setTitle("Eliminar")
+                .setMessage("¿Está seguro de eliminar a " + contactoSeleccionado.getNombre() + "?")
+                .setPositiveButton("Sí", (dialog, which) -> {
+                    SQLiteDatabase db = helper.getWritableDatabase();
+                    db.delete(SQLiteHelper.TABLE_CONTACTOS, SQLiteHelper.COLUMN_ID + "=?", new String[]{String.valueOf(contactoSeleccionado.getId())});
+                    db.close();
+                    obtenerContactos("");
+                    Toast.makeText(this, "Contacto eliminado", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 
     private void actualizarContacto() {
         if (contactoSeleccionado == null) {
-            Toast.makeText(this, "Seleccione un contacto", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Debe seleccionar un contacto de la lista", Toast.LENGTH_SHORT).show();
             return;
         }
         Intent intent = new Intent(this, MainActivity.class);
@@ -141,20 +159,53 @@ public class ActivityLista extends AppCompatActivity {
 
     private void compartirContacto() {
         if (contactoSeleccionado == null) {
-            Toast.makeText(this, "Seleccione un contacto", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Debe seleccionar un contacto de la lista", Toast.LENGTH_SHORT).show();
             return;
         }
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT, "Contacto: " + contactoSeleccionado.getNombre() + "\nTel: " + contactoSeleccionado.getTelefono());
-        startActivity(Intent.createChooser(intent, "Compartir con"));
+        intent.putExtra(Intent.EXTRA_TEXT, "Nombre: " + contactoSeleccionado.getNombre() + "\nTeléfono: " + contactoSeleccionado.getTelefono());
+        startActivity(Intent.createChooser(intent, "Compartir contacto vía:"));
     }
 
     private void verImagen() {
         if (contactoSeleccionado == null) {
-            Toast.makeText(this, "Seleccione un contacto", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Debe seleccionar un contacto de la lista", Toast.LENGTH_SHORT).show();
             return;
         }
-        Toast.makeText(this, "Mostrando imagen de " + contactoSeleccionado.getNombre(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Mostrando perfil de: " + contactoSeleccionado.getNombre(), Toast.LENGTH_SHORT).show();
+    }
+
+    class ContactoAdapter extends BaseAdapter {
+        @Override
+        public int getCount() { return listaContactos.size(); }
+        @Override
+        public Object getItem(int position) { return listaContactos.get(position); }
+        @Override
+        public long getItemId(int position) { return listaContactos.get(position).getId(); }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(ActivityLista.this).inflate(R.layout.item_contacto, parent, false);
+            }
+            Contactos c = listaContactos.get(position);
+            TextView name = convertView.findViewById(R.id.txtItemNombre);
+            TextView phone = convertView.findViewById(R.id.txtItemTelefono);
+            RadioButton rb = convertView.findViewById(R.id.rbSeleccion);
+
+            name.setText(c.getNombre());
+            phone.setText(c.getTelefono());
+            rb.setChecked(position == selectedPosition);
+
+            // Permitir que el clic en el RadioButton también seleccione la fila
+            rb.setOnClickListener(v -> {
+                selectedPosition = position;
+                contactoSeleccionado = listaContactos.get(position);
+                notifyDataSetChanged();
+            });
+
+            return convertView;
+        }
     }
 }
