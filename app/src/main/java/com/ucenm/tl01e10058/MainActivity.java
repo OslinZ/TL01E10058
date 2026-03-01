@@ -70,12 +70,12 @@ public class MainActivity extends AppCompatActivity {
         String pais = spnPais.getSelectedItem().toString();
 
         if (TextUtils.isEmpty(nombre)) {
-            txtNombre.setError("debe escribir un nombre");
+            txtNombre.setError("Debe escribir un nombre");
             return;
         }
 
         if (TextUtils.isEmpty(telefono)) {
-            txtTelefono.setError("debe escribir un teléfono");
+            txtTelefono.setError("Debe escribir un teléfono");
             return;
         }
 
@@ -86,6 +86,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (!telefono.matches("^[0-9]{8,15}$")) {
             txtTelefono.setError("Teléfono inválido");
+            return;
+        }
+
+        if (TextUtils.isEmpty(nota)) {
+            txtNota.setError("Debe escribir una nota");
             return;
         }
 
