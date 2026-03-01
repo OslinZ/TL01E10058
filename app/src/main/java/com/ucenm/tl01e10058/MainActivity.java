@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,7 +13,11 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,7 +30,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        // Ajustar el diseño para que no se oculte tras los botones virtuales (Navigation Bar)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         helper = new SQLiteHelper(this);
 
@@ -49,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
         
-        // Cargar datos si viene de una actualización
         checkIntentExtras();
     }
 
@@ -58,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
             txtNombre.setText(getIntent().getStringExtra("nombre"));
             txtTelefono.setText(getIntent().getStringExtra("telefono"));
             txtNota.setText(getIntent().getStringExtra("nota"));
-            // Podríamos seleccionar el país en el spinner buscando la coincidencia
             btnSalvar.setText("Actualizar Contacto");
         }
     }
@@ -104,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
             int id = getIntent().getIntExtra("id", -1);
             db.update(SQLiteHelper.TABLE_CONTACTOS, values, SQLiteHelper.COLUMN_ID + "=?", new String[]{String.valueOf(id)});
             Toast.makeText(this, "Contacto actualizado", Toast.LENGTH_SHORT).show();
-            finish(); // Volver a la lista
+            finish();
         } else {
             db.insert(SQLiteHelper.TABLE_CONTACTOS, null, values);
             Toast.makeText(this, "Contacto guardado", Toast.LENGTH_SHORT).show();
