@@ -2,4 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="green_save">#28a745</color>
+    <color name="blue_contacts">#007bff</color>
+    <color name="gray_background">#f8f9fa</color>
 </resources>

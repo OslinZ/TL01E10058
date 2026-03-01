@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">TL01E10058</string>
+    <string name="label_pais">Pais</string>
+    <string name="label_nombre">Nombre</string>
+    <string name="label_telefono">Teléfono</string>
+    <string name="label_nota">Nota</string>
+    <string name="btn_salvar">Salvar Contacto</string>
+    <string name="btn_contactos">Contactos Salvados</string>
+    <string name="hint_nombre">Escriba su nombre</string>
+    <string name="hint_telefono">Escriba su teléfono</string>
+    <string name="hint_nota">Escriba una nota</string>
 </resources>
