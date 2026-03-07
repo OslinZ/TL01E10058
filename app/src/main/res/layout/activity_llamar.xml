@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Layout para la pantalla de realización de llamadas -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,10 +9,16 @@
     android:background="@color/white"
     tools:context=".ActivityLlamar">
 
+    <!-- Botón para regresar a la lista de contactos -->
+
+    <!-- Texto que muestra el número de teléfono al que se llamará -->
+
     <Button
         android:id="@+id/btnAtrasLlamar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="56dp"
         android:text="Atras"
         android:textAllCaps="false"
         app:layout_constraintStart_toStartOf="parent"
@@ -30,6 +37,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.3" />
 
+    <!-- Botón flotante para iniciar la llamada telefónica -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnActionCall"
         android:layout_width="wrap_content"

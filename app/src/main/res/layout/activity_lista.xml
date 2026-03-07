@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Layout para mostrar la lista de contactos guardados -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,6 +9,7 @@
     android:background="@android:color/white"
     tools:context=".ActivityLista">
 
+    <!-- Botón para regresar a la actividad principal -->
     <Button
         android:id="@+id/btnAtras"
         android:layout_width="wrap_content"
@@ -19,6 +21,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Campo de búsqueda para filtrar contactos por nombre -->
     <EditText
         android:id="@+id/txtBuscar"
         android:layout_width="0dp"
@@ -35,6 +38,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnAtras" />
 
+    <!-- Lista principal de contactos -->
     <ListView
         android:id="@+id/listContactos"
         android:layout_width="0dp"
@@ -49,6 +53,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/txtBuscar" />
 
+    <!-- Panel inferior con botones de acción para el contacto seleccionado -->
     <GridLayout
         android:id="@+id/layoutButtons"
         android:layout_width="match_parent"
